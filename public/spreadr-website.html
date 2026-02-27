@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spreadr - Amazon Product Importer for Shopify</title>
+  <meta name="description" content="Import and sync Amazon products to your Shopify store in minutes. Start an Amazon affiliate store or dropship with Spreadr. Trusted by 10,000+ merchants.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --fg: #1a2332;
+      --card: #ffffff;
+      --card-fg: #1a2332;
+      --primary: #00b4d8;
+      --primary-fg: #ffffff;
+      --secondary: #eef1f5;
+      --secondary-fg: #1a2332;
+      --muted: #e4e8ed;
+      --muted-fg: #6b7a8d;
+      --accent: #5da83a;
+      --accent-fg: #ffffff;
+      --border: #e0e4ea;
+      --shopify: #5da83a;
+      --shopify-fg: #ffffff;
+      --radius: 0.625rem;
+      --hero-gradient: linear-gradient(135deg, #00b4d8 0%, #3399ff 50%, rgba(0,180,216,0.8) 100%);
+      --section-gradient: linear-gradient(180deg, #f5f7fa 0%, rgba(0,180,216,0.03) 100%);
+      --card-shadow: 0 4px 24px -4px rgba(0,180,216,0.1);
+      --card-shadow-hover: 0 12px 40px -8px rgba(0,180,216,0.2);
+      --text-gradient: linear-gradient(135deg, #00b4d8, #3399ff);
+      --footer-bg: #1a2332;
+      --footer-fg: #f5f7fa;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', system-ui, sans-serif; }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+    ul { list-style: none; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    .text-gradient { background: var(--text-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-gradient { background: var(--hero-gradient); }
+    .section-gradient { background: var(--section-gradient); }
+
+    .card-elevated {
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .card-elevated:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.625rem 1.5rem; border-radius: var(--radius); font-weight: 600;
+      font-size: 0.875rem; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-shopify { background: var(--shopify); color: var(--shopify-fg); }
+    .btn-shopify:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--fg); }
+    .btn-outline:hover { background: var(--secondary); }
+    .btn-lg { padding: 0.75rem 2rem; font-size: 1rem; }
+    .btn-card { background: var(--card); color: var(--fg); }
+    .btn-card:hover { opacity: 0.9; }
+    .btn-full { width: 100%; }
+
+    .glass {
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.85);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.375rem 1rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 500;
+    }
+
+    /* Page system */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      backdrop-filter: blur(20px); background: rgba(255,255,255,0.85);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .navbar-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 4rem; padding: 0 1rem; max-width: 1200px; margin: 0 auto;
+    }
+    .navbar-logo { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+    .navbar-logo span { font-size: 1.25rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+    .nav-links { display: none; align-items: center; gap: 0.25rem; }
+    .nav-link {
+      padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem;
+      font-weight: 500; color: var(--muted-fg); transition: all 0.2s; cursor: pointer;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--primary); background: rgba(0,180,216,0.1); }
+    .nav-cta { display: none; }
+    .mobile-toggle {
+      display: block; padding: 0.5rem; background: none; border: none;
+      cursor: pointer; color: var(--fg);
+    }
+    .mobile-menu {
+      display: none; padding: 1rem; background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px); border-top: 1px solid var(--border);
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu .nav-link { display: block; width: 100%; text-align: left; }
+    .mobile-menu .btn { width: 100%; margin-top: 0.5rem; }
+
+    @media (min-width: 1024px) {
+      .nav-links { display: flex; }
+      .nav-cta { display: flex; }
+      .mobile-toggle { display: none; }
+    }
+
+    /* Main content offset for fixed nav */
+    main { padding-top: 4rem; }
+
+    /* ===== GRID ===== */
+    .grid { display: grid; gap: 1.5rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-5 { grid-template-columns: 1fr; }
+
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .grid-5 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .grid-4 { grid-template-columns: repeat(4, 1fr); }
+      .grid-5 { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    /* ===== SECTIONS ===== */
+    .section { padding: 5rem 0; }
+    .section-sm { padding: 3.5rem 0; }
+
+    .section-header { text-align: center; margin-bottom: 3rem; }
+    .section-header h2 { font-size: 1.875rem; font-weight: 700; margin-bottom: 1rem; }
+    .section-header p { color: var(--muted-fg); max-width: 36rem; margin: 0 auto; }
+
+    @media (min-width: 768px) {
+      .section-header h2 { font-size: 2.25rem; }
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 0.75rem; padding: 1.5rem;
+    }
+    .card-lg { border-radius: 1rem; padding: 2rem; }
+
+    .icon-box {
+      width: 3rem; height: 3rem; border-radius: 0.5rem;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .icon-box-primary { background: rgba(0,180,216,0.1); color: var(--primary); }
+    .icon-box-shopify { background: rgba(93,168,58,0.1); color: var(--shopify); }
+    .icon-box-amber { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .icon-box-lg { width: 3.5rem; height: 3.5rem; border-radius: 1rem; margin-bottom: 1.25rem; }
+
+    .dot { width: 0.375rem; height: 0.375rem; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-primary { background: var(--primary); }
+    .dot-shopify { background: var(--shopify); }
+
+    /* Stars */
+    .stars { display: flex; gap: 2px; }
+    .star { color: #f59e0b; font-size: 1rem; }
+
+    /* Tags */
+    .tag {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500;
+    }
+    .tag-primary { background: rgba(0,180,216,0.1); color: var(--primary); border: 1px solid rgba(0,180,216,0.2); }
+    .tag-shopify { background: rgba(93,168,58,0.1); color: var(--shopify); border: 1px solid rgba(93,168,58,0.2); }
+    .tag-secondary { background: var(--secondary); color: var(--secondary-fg); }
+
+    /* ===== HERO ===== */
+    .hero-title { font-size: 2.25rem; font-weight: 700; line-height: 1.15; }
+    @media (min-width: 768px) { .hero-title { font-size: 3rem; } }
+    @media (min-width: 1024px) { .hero-title { font-size: 3.75rem; } }
+
+    /* ===== ACCORDION ===== */
+    .accordion-item { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
+    .accordion-trigger {
+      width: 100%; padding: 1rem; background: none; border: none; text-align: left;
+      font-size: 0.875rem; font-weight: 500; cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center; color: var(--fg);
+      font-family: inherit;
+    }
+    .accordion-trigger::after { content: '+'; font-size: 1.25rem; color: var(--muted-fg); transition: transform 0.2s; }
+    .accordion-trigger.open::after { content: '−'; }
+    .accordion-content { padding: 0 1rem 1rem; font-size: 0.875rem; color: var(--muted-fg); display: none; }
+    .accordion-content.open { display: block; }
+
+    /* ===== FORM ===== */
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .form-input, .form-textarea {
+      width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 0.875rem; font-family: inherit;
+      background: var(--bg); transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+    .form-textarea { resize: vertical; min-height: 100px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* ===== FOOTER ===== */
+    .footer { background: var(--footer-bg); color: var(--footer-fg); padding: 4rem 0 0; }
+    .footer h4 { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(245,247,250,0.5); margin-bottom: 1rem; }
+    .footer a { color: rgba(245,247,250,0.7); font-size: 0.875rem; transition: color 0.2s; }
+    .footer a:hover { color: var(--primary); }
+    .footer-bottom {
+      border-top: 1px solid rgba(245,247,250,0.1); margin-top: 3rem; padding: 2rem 0;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .footer-bottom p { font-size: 0.875rem; color: rgba(245,247,250,0.5); }
+    .social-icons { display: flex; gap: 0.75rem; }
+    .social-icon {
+      width: 2.25rem; height: 2.25rem; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; background: rgba(245,247,250,0.1);
+      transition: background 0.2s; font-size: 0.875rem;
+    }
+    .social-icon:hover { background: rgba(0,180,216,0.8); }
+
+    /* Helpers */
+    .text-center { text-align: center; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-lg { font-size: 1.125rem; }
+    .text-muted { color: var(--muted-fg); }
+    .text-primary { color: var(--primary); }
+    .text-shopify { color: var(--shopify); }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-5 { margin-bottom: 1.25rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-6 { gap: 1.5rem; }
+    .gap-8 { gap: 2rem; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
+    .space-y-8 > * + * { margin-top: 2rem; }
+    .max-w-xl { max-width: 36rem; }
+    .max-w-2xl { max-width: 42rem; }
+    .max-w-3xl { max-width: 48rem; }
+    .max-w-4xl { max-width: 56rem; }
+    .max-w-5xl { max-width: 64rem; }
+    .max-w-6xl { max-width: 72rem; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .relative { position: relative; }
+    .overflow-hidden { overflow: hidden; }
+    .rounded-2xl { border-radius: 1rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .italic { font-style: italic; }
+    .shrink-0 { flex-shrink: 0; }
+    .inline-flex { display: inline-flex; }
+    .block { display: block; }
+    .w-full { width: 100%; }
+    .hidden { display: none; }
+
+    /* Hero overlay for case studies / about */
+    .hero-overlay {
+      position: relative; padding: 5rem 0; overflow: hidden;
+      background-size: cover; background-position: center;
+    }
+    .hero-overlay::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(26,35,50,0.7);
+    }
+    .hero-overlay .container { position: relative; z-index: 1; }
+    .hero-overlay-about::before {
+      background: linear-gradient(to right, rgba(26,35,50,0.8), rgba(26,35,50,0.6), rgba(26,35,50,0.4));
+    }
+
+    /* Feature showcase alternating */
+    .feature-row { display: grid; gap: 3rem; align-items: center; }
+    @media (min-width: 768px) { .feature-row { grid-template-columns: 1fr 1fr; } }
+
+    /* Case study card */
+    .cs-card { display: grid; overflow: hidden; }
+    @media (min-width: 1024px) { .cs-card { grid-template-columns: 3fr 2fr; } }
+    .cs-stats { background: rgba(0,0,0,0.02); padding: 2rem 2.5rem; }
+
+    /* Milestone timeline */
+    .milestone { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .milestone-year { flex-shrink: 0; width: 5rem; text-align: right; }
+    .milestone-line { width: 2px; background: var(--border); position: relative; min-height: 100%; }
+    .milestone-dot {
+      position: absolute; top: 0.375rem; left: -0.3125rem;
+      width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--primary);
+    }
+
+    /* Popular badge on pricing */
+    .popular-badge {
+      position: absolute; top: -0.75rem; left: 50%; transform: translateX(-50%);
+      background: var(--primary); color: var(--primary-fg); font-size: 0.75rem;
+      font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px;
+    }
+
+    /* Checklist */
+    .checklist li { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+    .check-icon { flex-shrink: 0; color: var(--shopify); }
+
+    /* Blog card top bar */
+    .blog-bar { height: 0.25rem; background: var(--hero-gradient); }
+
+    /* Blockquote */
+    .quote { border-left: 4px solid var(--primary); padding-left: 1rem; font-style: italic; color: var(--muted-fg); }
+
+    /* SVG icons inline (simple versions) */
+    .icon { width: 1.25rem; height: 1.25rem; display: inline-block; vertical-align: middle; }
+    .icon-sm { width: 1rem; height: 1rem; }
+    .icon-lg { width: 1.75rem; height: 1.75rem; }
+
+    /* Banner section */
+    .banner-primary { background: var(--primary); color: var(--primary-fg); }
+    .banner-primary .icon-box { background: rgba(255,255,255,0.1); }
+
+    /* Responsive text */
+    @media (max-width: 767px) {
+      .form-row { grid-template-columns: 1fr; }
+      .hero-title { font-size: 2rem; }
+    }
+
+    /* Shopify SVG icon */
+    .shopify-icon { width: 1rem; height: 1rem; fill: currentColor; display: inline-block; vertical-align: middle; }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <div class="navbar-logo" onclick="showPage('home')">
+      <div style="width:2rem;height:2rem;border-radius:0.5rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem;">S</div>
+      <span>Spreadr</span>
+    </div>
+    <div class="nav-links" id="desktopNav">
+      <span class="nav-link active" onclick="showPage('home')">Home</span>
+      <span class="nav-link" onclick="showPage('features')">Features</span>
+      <span class="nav-link" onclick="showPage('case-studies')">Case Studies</span>
+      <span class="nav-link" onclick="showPage('blog')">Blog</span>
+      <span class="nav-link" onclick="showPage('faqs')">FAQs</span>
+      <span class="nav-link" onclick="showPage('about')">About Us</span>
+      <span class="nav-link" onclick="showPage('contact')">Contact Us</span>
+    </div>
+    <div class="nav-cta">
+      <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" rel="noopener noreferrer">
+        <button class="btn btn-shopify">
+          <svg class="shopify-icon" viewBox="0 0 24 24"><path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.058-.121-.074l-.914 21.104zm-1.024-17.379c0-.137-.939-.191-2.151-.191-3.508 0-7.329 1.462-7.329 5.27 0 1.604.542 2.749 1.93 3.691 1.228.834 1.458 1.069 1.458 1.753 0 .683-.439 1.424-1.305 1.424-1.284 0-2.385-.844-2.385-.844l-.844 2.522s1.387.946 3.559.946c2.172 0 3.852-1.351 3.852-3.502 0-1.753-.939-2.709-2.023-3.471-1.013-.712-1.372-1.069-1.372-1.753 0-.547.398-1.139 1.284-1.139 1.454 0 2.093.534 2.093.534l.822-2.484s-.717-.547-2.289-.547c-.17 0-.337.01-.5.027.025-.017.049-.036.075-.053 1.379-.91 3.267-1.423 4.472-1.423.144 0 .281.006.407.019l.246-1.279z"/></svg>
+          Install on Shopify
+        </button>
+      </a>
+    </div>
+    <button class="mobile-toggle" onclick="toggleMobile()">
+      <svg id="menuIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg id="closeIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <span class="nav-link active" onclick="showPage('home')">Home</span>
+    <span class="nav-link" onclick="showPage('features')">Features</span>
+    <span class="nav-link" onclick="showPage('case-studies')">Case Studies</span>
+    <span class="nav-link" onclick="showPage('blog')">Blog</span>
+    <span class="nav-link" onclick="showPage('faqs')">FAQs</span>
+    <span class="nav-link" onclick="showPage('about')">About Us</span>
+    <span class="nav-link" onclick="showPage('contact')">Contact Us</span>
+    <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" rel="noopener noreferrer">
+      <button class="btn btn-shopify btn-full mt-2">Install on Shopify</button>
+    </a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ========================================== -->
+<!-- HOME PAGE -->
+<!-- ========================================== -->
+<div class="page active" id="page-home">
+
+  <!-- Hero -->
+  <section class="section section-gradient" style="position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top right, rgba(0,180,216,0.08), transparent 60%);"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="grid-2 grid" style="align-items:center;gap:3rem;">
+        <div class="space-y-6">
+          <span class="badge tag-shopify">
+            <svg class="shopify-icon" viewBox="0 0 24 24"><path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.058-.121-.074l-.914 21.104zm-1.024-17.379c0-.137-.939-.191-2.151-.191-3.508 0-7.329 1.462-7.329 5.27 0 1.604.542 2.749 1.93 3.691 1.228.834 1.458 1.069 1.458 1.753 0 .683-.439 1.424-1.305 1.424-1.284 0-2.385-.844-2.385-.844l-.844 2.522s1.387.946 3.559.946c2.172 0 3.852-1.351 3.852-3.502 0-1.753-.939-2.709-2.023-3.471-1.013-.712-1.372-1.069-1.372-1.753 0-.547.398-1.139 1.284-1.139 1.454 0 2.093.534 2.093.534l.822-2.484s-.717-.547-2.289-.547c-.17 0-.337.01-.5.027.025-.017.049-.036.075-.053 1.379-.91 3.267-1.423 4.472-1.423.144 0 .281.006.407.019l.246-1.279z"/></svg>
+            Shopify App
+          </span>
+          <h1 class="hero-title">Build Your Amazon <span class="text-gradient">Affiliate</span> &amp; <span class="text-gradient">Dropshipping</span> Store</h1>
+          <p class="text-lg text-muted" style="max-width:32rem;">Import Amazon products to Shopify in one click. Earn affiliate commissions or dropship with custom markup — no inventory, no coding. Trusted by 10,000+ merchants worldwide.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-shopify btn-lg">Install on Shopify →</button></a>
+            <button class="btn btn-outline btn-lg" onclick="showPage('features')">Explore Features</button>
+          </div>
+          <div class="flex items-center gap-6 pt-2 text-sm text-muted">
+            <div class="flex items-center gap-2">
+              <span class="stars">★★★★★</span>
+              <strong style="color:var(--fg);">4.6</strong> (254 reviews)
+            </div>
+            <span>•</span>
+            <span>7-day free trial</span>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);background:var(--secondary);min-height:300px;display:flex;align-items:center;justify-content:center;">
+            <div style="padding:2rem;text-center;text-align:center;">
+              <div style="font-size:3rem;margin-bottom:1rem;">📦</div>
+              <p class="font-bold font-display">Spreadr Dashboard</p>
+              <p class="text-sm text-muted">Import &amp; manage Amazon products</p>
+            </div>
+          </div>
+          <div class="card-elevated" style="position:absolute;bottom:-1rem;left:-1rem;background:var(--card);border-radius:0.75rem;padding:0.75rem;border:1px solid var(--border);">
+            <div class="flex items-center gap-2">
+              <div class="icon-box-shopify" style="width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(93,168,58,0.1);">💰</div>
+              <div>
+                <p style="font-size:0.75rem;font-weight:600;">Keep 100% Commissions</p>
+                <p style="font-size:0.75rem;color:var(--muted-fg);">We never take a cut</p>
+              </div>
+            </div>
+          </div>
+          <div class="card-elevated" style="position:absolute;top:-1rem;right:-1rem;background:var(--card);border-radius:0.75rem;padding:0.75rem;border:1px solid var(--border);">
+            <div class="flex items-center gap-2">
+              <div style="width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,180,216,0.1);">🔄</div>
+              <div>
+                <p style="font-size:0.75rem;font-weight:600;">Auto-Sync</p>
+                <p style="font-size:0.75rem;color:var(--muted-fg);">Always up to date</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Business Models Banner -->
+  <section class="section-sm banner-primary">
+    <div class="container">
+      <div class="grid grid-3 text-center" style="color:var(--primary-fg);">
+        <div class="space-y-3" style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:3.5rem;height:3.5rem;border-radius:1rem;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔗</div>
+          <h3 class="font-display font-semibold text-lg">Affiliate Marketing</h3>
+          <p class="text-sm" style="opacity:0.7;max-width:18rem;">Earn Amazon commissions with every click. No inventory needed.</p>
+        </div>
+        <div class="space-y-3" style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:3.5rem;height:3.5rem;border-radius:1rem;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🚚</div>
+          <h3 class="font-display font-semibold text-lg">Dropshipping</h3>
+          <p class="text-sm" style="opacity:0.7;max-width:18rem;">Set custom markup pricing. Amazon handles fulfillment.</p>
+        </div>
+        <div class="space-y-3" style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:3.5rem;height:3.5rem;border-radius:1rem;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🌍</div>
+          <h3 class="font-display font-semibold text-lg">Global Reach</h3>
+          <p class="text-sm" style="opacity:0.7;max-width:18rem;">Geo-localize visitors to their nearest Amazon region.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="section-sm">
+    <div class="container">
+      <div class="grid grid-4 text-center">
+        <div><p style="font-size:2rem;font-weight:700;color:var(--primary);" class="font-display">10,000+</p><p class="text-sm text-muted mt-1">Active Merchants</p></div>
+        <div><p style="font-size:2rem;font-weight:700;color:var(--primary);" class="font-display">1M+</p><p class="text-sm text-muted mt-1">Products Imported</p></div>
+        <div><p style="font-size:2rem;font-weight:700;color:var(--primary);" class="font-display">4.6★</p><p class="text-sm text-muted mt-1">App Rating</p></div>
+        <div><p style="font-size:2rem;font-weight:700;color:var(--primary);" class="font-display">8+ Years</p><p class="text-sm text-muted mt-1">Since 2016</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Overview -->
+  <section class="section section-gradient">
+    <div class="container">
+      <div class="section-header">
+        <h2>Everything You Need to <span class="text-gradient">Scale</span></h2>
+        <p>From one-click imports to auto-syncing, Spreadr gives you the tools to build a profitable Amazon affiliate or dropshipping store on Shopify.</p>
+      </div>
+      <div class="grid grid-3">
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">⚡</div><h3 class="font-display font-semibold text-lg mb-2">1-Click Import</h3><p class="text-sm text-muted">Import any Amazon product to your Shopify store instantly. Full product details, images, and variations.</p></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">🔄</div><h3 class="font-display font-semibold text-lg mb-2">Auto-Sync</h3><p class="text-sm text-muted">Keep prices and availability in sync with Amazon automatically. Super-Sync option for faster updates.</p></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">🌍</div><h3 class="font-display font-semibold text-lg mb-2">Geo-Localize</h3><p class="text-sm text-muted">Redirect visitors to their local Amazon store automatically. Support all major Amazon regions worldwide.</p></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">🏷️</div><h3 class="font-display font-semibold text-lg mb-2">Markup Pricing</h3><p class="text-sm text-muted">Set custom pricing rules and markups for your imported products. Perfect for dropshipping margins.</p></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">🌐</div><h3 class="font-display font-semibold text-lg mb-2">Chrome Extension</h3><p class="text-sm text-muted">Import products directly from Amazon with our free Chrome Extension. Browse and add in seconds.</p></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary">📊</div><h3 class="font-display font-semibold text-lg mb-2">Analytics</h3><p class="text-sm text-muted">Track affiliate clicks, conversions, and commissions with built-in analytics and Google Analytics integration.</p></div>
+      </div>
+      <div class="text-center mt-8">
+        <button class="btn btn-outline btn-lg" onclick="showPage('features')">View All Features →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>Get started in 3 simple steps — from import to earning</p>
+      </div>
+      <div class="grid grid-3 max-w-5xl mx-auto" style="gap:2.5rem;">
+        <div class="text-center">
+          <div style="position:relative;margin-bottom:1.5rem;">
+            <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);aspect-ratio:1;background:var(--secondary);display:flex;align-items:center;justify-content:center;">
+              <div style="font-size:3rem;">📥</div>
+            </div>
+            <div style="position:absolute;top:-1rem;left:-1rem;width:3rem;height:3rem;border-radius:0.75rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,180,216,0.3);">01</div>
+          </div>
+          <h3 class="font-display font-semibold" style="font-size:1.25rem;margin-bottom:0.5rem;">Import Products</h3>
+          <p class="text-sm text-muted">Use 1-click import, bulk CSV upload, or the Chrome Extension to add Amazon products to your Shopify store instantly.</p>
+        </div>
+        <div class="text-center">
+          <div style="position:relative;margin-bottom:1.5rem;">
+            <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);aspect-ratio:1;background:var(--secondary);display:flex;align-items:center;justify-content:center;">
+              <div style="font-size:3rem;">🔄</div>
+            </div>
+            <div style="position:absolute;top:-1rem;left:-1rem;width:3rem;height:3rem;border-radius:0.75rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,180,216,0.3);">02</div>
+          </div>
+          <h3 class="font-display font-semibold" style="font-size:1.25rem;margin-bottom:0.5rem;">Sync &amp; Customize</h3>
+          <p class="text-sm text-muted">Products auto-sync prices and availability with Amazon. Customize markup, tags, and descriptions for your brand.</p>
+        </div>
+        <div class="text-center">
+          <div style="position:relative;margin-bottom:1.5rem;">
+            <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);aspect-ratio:1;background:var(--secondary);display:flex;align-items:center;justify-content:center;">
+              <div style="font-size:3rem;">💰</div>
+            </div>
+            <div style="position:absolute;top:-1rem;left:-1rem;width:3rem;height:3rem;border-radius:0.75rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,180,216,0.3);">03</div>
+          </div>
+          <h3 class="font-display font-semibold" style="font-size:1.25rem;margin-bottom:0.5rem;">Earn &amp; Grow</h3>
+          <p class="text-sm text-muted">Earn affiliate commissions on every click or dropship with your own pricing. Geo-localize visitors and track revenue.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Affiliate & Dropship Highlight -->
+  <section class="section section-gradient">
+    <div class="container">
+      <div class="grid grid-2 max-w-5xl mx-auto" style="gap:2rem;">
+        <div class="card card-lg card-elevated">
+          <div class="icon-box icon-box-lg icon-box-shopify">🔗</div>
+          <h3 style="font-size:1.5rem;font-weight:700;" class="font-display mb-3">Amazon Affiliate</h3>
+          <p class="text-muted mb-4">Earn commissions through the Amazon Associates program. Visitors click "View on Amazon" and you earn on every qualifying purchase — zero inventory, zero risk.</p>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2"><span class="dot dot-shopify"></span>Keep 100% of affiliate commissions</li>
+            <li class="flex items-center gap-2"><span class="dot dot-shopify"></span>No inventory or fulfillment needed</li>
+            <li class="flex items-center gap-2"><span class="dot dot-shopify"></span>Amazon handles shipping &amp; returns</li>
+            <li class="flex items-center gap-2"><span class="dot dot-shopify"></span>Geo-localize to boost conversions</li>
+          </ul>
+        </div>
+        <div class="card card-lg card-elevated">
+          <div class="icon-box icon-box-lg icon-box-primary">🚚</div>
+          <h3 style="font-size:1.5rem;font-weight:700;" class="font-display mb-3">Dropshipping</h3>
+          <p class="text-muted mb-4">Set your own prices with custom markup. Customers buy on your store, you order from Amazon at a lower price and pocket the difference.</p>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2"><span class="dot dot-primary"></span>Custom markup pricing &amp; margins</li>
+            <li class="flex items-center gap-2"><span class="dot dot-primary"></span>Add to Cart button on your store</li>
+            <li class="flex items-center gap-2"><span class="dot dot-primary"></span>Bulk import thousands of products</li>
+            <li class="flex items-center gap-2"><span class="dot dot-primary"></span>Auto-sync keeps prices accurate</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Simple, Transparent Pricing</h2>
+        <p>Plans starting from just $5/month. 7-day free trial on all plans.</p>
+      </div>
+      <div class="grid grid-4 max-w-5xl mx-auto" style="gap:1.5rem;">
+        <div class="card card-elevated relative" style="border:2px solid var(--border);">
+          <h3 class="font-display font-semibold text-lg">Basic</h3>
+          <p style="font-size:1.875rem;font-weight:700;" class="font-display mt-2">$5<span class="text-sm text-muted" style="font-weight:400;">/mo</span></p>
+          <ul class="space-y-2 mt-4"><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Unlimited imports</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Amazon Button Link</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Markup Pricing</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>All Amazon Regions</li></ul>
+          <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" class="block mt-6"><button class="btn btn-outline btn-full">Start Free Trial</button></a>
+        </div>
+        <div class="card card-elevated relative" style="border:2px solid var(--primary);">
+          <div class="popular-badge">Most Popular</div>
+          <h3 class="font-display font-semibold text-lg">Pro</h3>
+          <p style="font-size:1.875rem;font-weight:700;" class="font-display mt-2">$10<span class="text-sm text-muted" style="font-weight:400;">/mo</span></p>
+          <ul class="space-y-2 mt-4"><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Auto-sync 1,000 products</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Geo-localize</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Analytics</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Chrome Extension</li></ul>
+          <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" class="block mt-6"><button class="btn btn-primary btn-full">Start Free Trial</button></a>
+        </div>
+        <div class="card card-elevated relative" style="border:2px solid var(--border);">
+          <h3 class="font-display font-semibold text-lg">Gold</h3>
+          <p style="font-size:1.875rem;font-weight:700;" class="font-display mt-2">$20<span class="text-sm text-muted" style="font-weight:400;">/mo</span></p>
+          <ul class="space-y-2 mt-4"><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Auto-sync 3,000 products</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Manual-sync</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Bulk actions</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>All Pro features</li></ul>
+          <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" class="block mt-6"><button class="btn btn-outline btn-full">Start Free Trial</button></a>
+        </div>
+        <div class="card card-elevated relative" style="border:2px solid var(--border);">
+          <h3 class="font-display font-semibold text-lg">Higher</h3>
+          <p style="font-size:1.875rem;font-weight:700;" class="font-display mt-2">$35+<span class="text-sm text-muted" style="font-weight:400;">/mo</span></p>
+          <ul class="space-y-2 mt-4"><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Up to 50,000 products</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Super-sync option</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>Custom plans available</li><li class="text-sm text-muted flex items-center gap-2"><span class="dot dot-primary"></span>All Gold features</li></ul>
+          <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" class="block mt-6"><button class="btn btn-outline btn-full">Start Free Trial</button></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section section-gradient">
+    <div class="container">
+      <div class="section-header">
+        <h2>Loved by Merchants</h2>
+        <p>See what Shopify store owners say about Spreadr</p>
+      </div>
+      <div class="grid grid-3 max-w-5xl mx-auto">
+        <div class="card card-elevated">
+          <div class="stars mb-3">★★★★★</div>
+          <p class="text-sm text-muted italic mb-4">"Love this app. Easy transfer of link to store. A great app for beginners starting their affiliate journey."</p>
+          <p class="text-sm font-semibold">Home and Clothes GO SHOP</p>
+          <p class="text-xs text-muted">United States</p>
+        </div>
+        <div class="card card-elevated">
+          <div class="stars mb-3">★★★★★</div>
+          <p class="text-sm text-muted italic mb-4">"So far, so amazing. Customer service is instant and thorough. The affiliate setup was incredibly smooth."</p>
+          <p class="text-sm font-semibold">imprüv</p>
+          <p class="text-xs text-muted">United States</p>
+        </div>
+        <div class="card card-elevated">
+          <div class="stars mb-3">★★★★★</div>
+          <p class="text-sm text-muted italic mb-4">"Highly recommend for its user-friendly interface and effective affiliate integration, allowing seamless commission earnings from Amazon."</p>
+          <p class="text-sm font-semibold">Shopify Community</p>
+          <p class="text-xs text-muted">Worldwide</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section hero-gradient text-center" style="color:var(--primary-fg);">
+    <div class="container max-w-2xl mx-auto">
+      <h2 style="font-size:1.875rem;font-weight:700;margin-bottom:1rem;" class="font-display">Start Your Affiliate or Dropshipping Store Today</h2>
+      <p style="opacity:0.8;margin-bottom:2rem;">Join 10,000+ merchants already earning with Spreadr. Start your 7-day free trial — no credit card required.</p>
+      <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-card btn-lg">Install on Shopify →</button></a>
+    </div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- FEATURES PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-features">
+
+  <!-- Hero -->
+  <section class="section section-gradient text-center" style="position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at bottom left, rgba(0,180,216,0.06), transparent 60%);"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="max-w-3xl mx-auto">
+        <span class="tag tag-primary mb-6" style="display:inline-flex;">⚡ Feature-Rich Platform</span>
+        <h1 class="hero-title mb-6">Powerful Tools for <span class="text-gradient">Affiliate</span> &amp; <span class="text-gradient">Dropshipping</span></h1>
+        <p class="text-lg text-muted mb-8 max-w-2xl mx-auto">Everything you need to import, sync, and sell Amazon products on your Shopify store. Built for affiliate marketers and dropshippers.</p>
+        <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-shopify btn-lg">Start 7-Day Free Trial →</button></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Showcase -->
+  <section class="section">
+    <div class="container space-y-8" style="--space:6rem;">
+      <!-- Import -->
+      <div class="feature-row">
+        <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);background:var(--secondary);min-height:280px;display:flex;align-items:center;justify-content:center;"><div style="font-size:4rem;">📥</div></div>
+        <div class="space-y-4">
+          <span class="tag tag-primary">⚡ Import</span>
+          <h2 style="font-size:1.875rem;font-weight:700;" class="font-display">Import Products <span class="text-gradient">Your Way</span></h2>
+          <p class="text-muted">Choose from multiple import methods — paste a single Amazon URL, upload a CSV with hundreds of ASINs, or use our Chrome Extension to import while browsing Amazon.</p>
+          <ul class="checklist space-y-3"><li><span class="check-icon">✓</span> 1-click URL import from any Amazon page</li><li><span class="check-icon">✓</span> Bulk CSV upload with ASIN lists</li><li><span class="check-icon">✓</span> Chrome Extension for instant import</li><li><span class="check-icon">✓</span> Credits system — 1 USD = 50 credits</li></ul>
+        </div>
+      </div>
+
+      <!-- Sync -->
+      <div class="feature-row" style="margin-top:4rem;">
+        <div class="space-y-4" style="order:2;">
+          <span class="tag tag-primary">🔄 Sync</span>
+          <h2 style="font-size:1.875rem;font-weight:700;" class="font-display">Auto-Sync &amp; <span class="text-gradient">Super-Sync</span></h2>
+          <p class="text-muted">Never worry about outdated product information. Auto-sync keeps prices and availability updated periodically — critical for both affiliate and dropshipping models.</p>
+          <ul class="checklist space-y-3"><li><span class="check-icon">✓</span> Scheduled auto-sync up to 50,000 products</li><li><span class="check-icon">✓</span> Super-Sync for faster, frequent updates</li><li><span class="check-icon">✓</span> Custom rules for price &amp; stock changes</li><li><span class="check-icon">✓</span> Primary Amazon region selection</li></ul>
+        </div>
+        <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);background:var(--secondary);min-height:280px;display:flex;align-items:center;justify-content:center;order:1;"><div style="font-size:4rem;">🔄</div></div>
+      </div>
+
+      <!-- Monetize -->
+      <div class="feature-row" style="margin-top:4rem;">
+        <div class="card-elevated rounded-2xl overflow-hidden" style="border:1px solid var(--border);background:var(--secondary);min-height:280px;display:flex;align-items:center;justify-content:center;"><div style="font-size:4rem;">💰</div></div>
+        <div class="space-y-4">
+          <span class="tag tag-shopify">💰 Monetize</span>
+          <h2 style="font-size:1.875rem;font-weight:700;" class="font-display">Affiliate &amp; <span class="text-gradient">Dropship</span></h2>
+          <p class="text-muted">Choose your business model. Earn Amazon affiliate commissions with zero inventory, or dropship with full control over pricing and fulfillment. You keep 100% of commissions.</p>
+          <div class="grid grid-2" style="gap:1rem;">
+            <div style="background:var(--secondary);border-radius:0.75rem;padding:1rem;border:1px solid var(--border);">
+              <div style="font-size:1.25rem;margin-bottom:0.5rem;">🔗</div>
+              <h4 class="font-display font-semibold text-sm mb-1">Affiliate</h4>
+              <p class="text-xs text-muted">Earn commissions, zero inventory</p>
+            </div>
+            <div style="background:var(--secondary);border-radius:0.75rem;padding:1rem;border:1px solid var(--border);">
+              <div style="font-size:1.25rem;margin-bottom:0.5rem;">🚚</div>
+              <h4 class="font-display font-semibold text-sm mb-1">Dropship</h4>
+              <p class="text-xs text-muted">Custom pricing, full margins</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- All Features Grid -->
+  <section class="section section-gradient">
+    <div class="container">
+      <div class="section-header">
+        <h2>All Features</h2>
+        <p>A comprehensive toolkit for Amazon affiliate marketing and dropshipping on Shopify</p>
+      </div>
+      <div class="grid grid-4" style="gap:1.25rem;">
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">⚡</div><h3 class="font-display font-semibold text-sm mb-1">1-Click Product Import</h3><p class="text-xs text-muted mb-2">Import any Amazon product with a single click.</p><ul class="text-xs text-muted space-y-1"><li>• Single product import via URL</li><li>• Bulk import via CSV</li><li>• Chrome Extension import</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🔄</div><h3 class="font-display font-semibold text-sm mb-1">Auto-Sync & Super-Sync</h3><p class="text-xs text-muted mb-2">Keep products always up-to-date with Amazon.</p><ul class="text-xs text-muted space-y-1"><li>• Scheduled auto-sync</li><li>• Super-Sync for frequent updates</li><li>• Custom sync rules</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🏷️</div><h3 class="font-display font-semibold text-sm mb-1">Markup Pricing</h3><p class="text-xs text-muted mb-2">Set custom pricing rules for dropshipping margins.</p><ul class="text-xs text-muted space-y-1"><li>• Multiplier & fixed markup</li><li>• Assign cents to price</li><li>• Apply to existing products</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🌍</div><h3 class="font-display font-semibold text-sm mb-1">Geo-Localization</h3><p class="text-xs text-muted mb-2">Auto-detect visitor location and redirect.</p><ul class="text-xs text-muted space-y-1"><li>• Auto-detect visitor location</li><li>• All major Amazon regions</li><li>• Seamless redirects</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">📊</div><h3 class="font-display font-semibold text-sm mb-1">Click Tracking & Analytics</h3><p class="text-xs text-muted mb-2">Track affiliate clicks with GA and FB Pixel.</p><ul class="text-xs text-muted space-y-1"><li>• Google Analytics integration</li><li>• Facebook Pixel tracking</li><li>• View click data in dashboard</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🌐</div><h3 class="font-display font-semibold text-sm mb-1">Chrome Extension</h3><p class="text-xs text-muted mb-2">Browse Amazon and import products directly.</p><ul class="text-xs text-muted space-y-1"><li>• Free browser extension</li><li>• 1-click add to Shopify</li><li>• Works on any Amazon page</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-shopify" style="width:2.5rem;height:2.5rem;">🔗</div><h3 class="font-display font-semibold text-sm mb-1">Amazon Affiliate Model</h3><p class="text-xs text-muted mb-2">Earn commissions with zero inventory risk.</p><ul class="text-xs text-muted space-y-1"><li>• Keep 100% commissions</li><li>• Amazon button on product page</li><li>• Zero inventory risk</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🚚</div><h3 class="font-display font-semibold text-sm mb-1">Dropshipping Model</h3><p class="text-xs text-muted mb-2">Set your own prices with custom markup.</p><ul class="text-xs text-muted space-y-1"><li>• Custom markup pricing</li><li>• Add to Cart button</li><li>• Full pricing control</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">📝</div><h3 class="font-display font-semibold text-sm mb-1">Auto-Tagging & Defaults</h3><p class="text-xs text-muted mb-2">Auto-fill product type, vendor, and tags.</p><ul class="text-xs text-muted space-y-1"><li>• Auto-fill from Amazon</li><li>• Advanced auto-tagging</li><li>• Custom button text</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">⚙️</div><h3 class="font-display font-semibold text-sm mb-1">Bulk Actions</h3><p class="text-xs text-muted mb-2">Manage thousands of products efficiently.</p><ul class="text-xs text-muted space-y-1"><li>• Bulk delete & export</li><li>• Mass product updates</li><li>• CSV export</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">🛡️</div><h3 class="font-display font-semibold text-sm mb-1">All Amazon Regions</h3><p class="text-xs text-muted mb-2">Support for all Amazon marketplaces worldwide.</p><ul class="text-xs text-muted space-y-1"><li>• 15+ Amazon regions</li><li>• Multi-currency support</li><li>• Global reach</li></ul></div>
+        <div class="card card-elevated"><div class="icon-box icon-box-primary" style="width:2.5rem;height:2.5rem;">💱</div><h3 class="font-display font-semibold text-sm mb-1">Currency Conversion</h3><p class="text-xs text-muted mb-2">Auto convert prices to your store currency.</p><ul class="text-xs text-muted space-y-1"><li>• Auto currency conversion</li><li>• Real-time rates</li><li>• Multiple currencies</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section-sm hero-gradient text-center" style="color:var(--primary-fg);padding:4rem 0;">
+    <div class="container">
+      <h2 style="font-size:1.875rem;font-weight:700;margin-bottom:1rem;" class="font-display">Ready to Start Earning?</h2>
+      <p style="opacity:0.8;margin-bottom:1.5rem;">Try Spreadr free for 7 days. Build your affiliate or dropshipping store today.</p>
+      <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-card btn-lg">Install on Shopify →</button></a>
+    </div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- CASE STUDIES PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-case-studies">
+
+  <section class="hero-overlay" style="background-color:var(--fg);">
+    <div class="container text-center">
+      <h1 class="hero-title mb-4" style="color:var(--bg);">Success Stories</h1>
+      <p style="color:rgba(245,247,250,0.8);max-width:42rem;margin:0 auto;" class="text-lg">Discover how Shopify merchants are using Spreadr to build profitable Amazon affiliate and dropshipping businesses.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container space-y-8" style="max-width:72rem;">
+
+      <!-- Case 1 -->
+      <div class="card card-lg card-elevated cs-card" style="padding:0;overflow:hidden;">
+        <div style="padding:2rem 2.5rem;" class="space-y-6">
+          <div class="flex flex-wrap gap-2"><span class="tag tag-primary">Home & Fashion</span><span class="tag tag-secondary">United States</span></div>
+          <div><h2 class="font-display font-bold" style="font-size:1.5rem;">Home & Clothes GO SHOP</h2><p class="text-primary font-semibold">From Zero to 500+ Products in 30 Days</p></div>
+          <p class="text-muted">A beginner merchant who launched their first affiliate store using Spreadr. Within the first month, they imported over 500 products from Amazon and started earning affiliate commissions with zero inventory investment.</p>
+          <blockquote class="quote">"Love this app. Easy transfer of link to store. A great app for beginners."</blockquote>
+          <div class="stars">★★★★★</div>
+        </div>
+        <div class="cs-stats">
+          <h3 class="font-display font-semibold text-xs" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-fg);margin-bottom:1.5rem;">Key Results</h3>
+          <div class="space-y-6">
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">🛍️</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">500+</p><p class="text-xs text-muted">Products Imported</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">📈</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">$2.5K</p><p class="text-xs text-muted">Monthly Revenue</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">💰</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">2 Days</p><p class="text-xs text-muted">Time to Launch</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 2 -->
+      <div class="card card-lg card-elevated cs-card" style="padding:0;overflow:hidden;">
+        <div style="padding:2rem 2.5rem;" class="space-y-6">
+          <div class="flex flex-wrap gap-2"><span class="tag tag-primary">Lifestyle & Wellness</span><span class="tag tag-secondary">United States</span></div>
+          <div><h2 class="font-display font-bold" style="font-size:1.5rem;">imprüv Store</h2><p class="text-primary font-semibold">Premium Product Curation with Outstanding Support</p></div>
+          <p class="text-muted">imprüv built a curated lifestyle store importing premium Amazon products. They relied heavily on Spreadr's customer support and single-variant import feature to create a clean, focused shopping experience.</p>
+          <blockquote class="quote">"Customer service is instant and thorough. I don't mind single variants as long as customer service remains great."</blockquote>
+          <div class="stars">★★★★★</div>
+        </div>
+        <div class="cs-stats">
+          <h3 class="font-display font-semibold text-xs" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-fg);margin-bottom:1.5rem;">Key Results</h3>
+          <div class="space-y-6">
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">🛍️</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">200+</p><p class="text-xs text-muted">Curated Products</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">📈</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">98%</p><p class="text-xs text-muted">Customer Satisfaction</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">💰</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">&lt; 1hr</p><p class="text-xs text-muted">Support Response</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 3 -->
+      <div class="card card-lg card-elevated cs-card" style="padding:0;overflow:hidden;">
+        <div style="padding:2rem 2.5rem;" class="space-y-6">
+          <div class="flex flex-wrap gap-2"><span class="tag tag-primary">Electronics & Tech</span><span class="tag tag-secondary">Canada</span></div>
+          <div><h2 class="font-display font-bold" style="font-size:1.5rem;">TechGadgets Central</h2><p class="text-primary font-semibold">Scaling a Tech Dropshipping Empire</p></div>
+          <p class="text-muted">Starting with the Pro plan, this merchant grew from 100 products to 3,000+ using the Gold plan's auto-sync. They leverage markup pricing to maintain 25% margins on all dropshipped electronics.</p>
+          <blockquote class="quote">"The auto-sync feature is a game-changer. Products are always up to date and we never oversell."</blockquote>
+          <div class="stars">★★★★★</div>
+        </div>
+        <div class="cs-stats">
+          <h3 class="font-display font-semibold text-xs" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-fg);margin-bottom:1.5rem;">Key Results</h3>
+          <div class="space-y-6">
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">🛍️</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">3,000+</p><p class="text-xs text-muted">Active Products</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">📈</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">800+</p><p class="text-xs text-muted">Monthly Orders</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">💰</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">25%</p><p class="text-xs text-muted">Avg. Margin</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 4 -->
+      <div class="card card-lg card-elevated cs-card" style="padding:0;overflow:hidden;">
+        <div style="padding:2rem 2.5rem;" class="space-y-6">
+          <div class="flex flex-wrap gap-2"><span class="tag tag-primary">Fashion & Apparel</span><span class="tag tag-secondary">United Kingdom</span></div>
+          <div><h2 class="font-display font-bold" style="font-size:1.5rem;">FashionFind Global</h2><p class="text-primary font-semibold">Leveraging Geo-Localization for International Sales</p></div>
+          <p class="text-muted">This UK-based merchant used Spreadr's geo-localization feature to redirect international visitors to their local Amazon storefronts, increasing affiliate conversions by 40% across 8 countries.</p>
+          <blockquote class="quote">"Geo-localization was the missing piece. Our international visitors finally see prices in their own currency."</blockquote>
+          <div class="stars">★★★★★</div>
+        </div>
+        <div class="cs-stats">
+          <h3 class="font-display font-semibold text-xs" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-fg);margin-bottom:1.5rem;">Key Results</h3>
+          <div class="space-y-6">
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">🛍️</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">8</p><p class="text-xs text-muted">Countries Served</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">📈</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">40%</p><p class="text-xs text-muted">Conversion Increase</p></div></div>
+            <div class="flex items-center gap-4"><div class="icon-box icon-box-primary" style="width:3rem;height:3rem;">💰</div><div><p style="font-size:1.5rem;font-weight:700;" class="font-display">50K+</p><p class="text-xs text-muted">Monthly Traffic</p></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section-sm hero-gradient text-center" style="color:var(--primary-fg);padding:4rem 0;">
+    <div class="container"><h2 style="font-size:1.875rem;font-weight:700;margin-bottom:1rem;" class="font-display">Write Your Success Story</h2><p style="opacity:0.8;margin-bottom:1.5rem;">Join thousands of merchants growing with Spreadr.</p><a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-card btn-lg">Install on Shopify →</button></a></div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- BLOG PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-blog">
+
+  <section class="section section-gradient text-center">
+    <div class="container">
+      <h1 class="hero-title mb-4">Insights &amp; <span class="text-gradient">Guides</span></h1>
+      <p class="text-lg text-muted max-w-2xl mx-auto">Tips, guides, and insights on Amazon product importing, affiliate marketing, and growing your Shopify store.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <!-- Featured -->
+      <div class="card card-lg card-elevated mb-8" style="padding:0;overflow:hidden;">
+        <div class="grid grid-2" style="gap:0;">
+          <div class="hero-gradient" style="padding:2rem;display:flex;align-items:center;">
+            <div style="color:var(--primary-fg);">
+              <span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:999px;background:rgba(255,255,255,0.2);font-size:0.75rem;margin-bottom:1rem;">Featured</span>
+              <h2 class="font-display font-bold" style="font-size:1.5rem;margin-bottom:0.75rem;">The Complete Guide to Amazon Product Importing for Shopify</h2>
+              <p style="opacity:0.8;font-size:0.875rem;margin-bottom:1rem;">Everything you need to know about importing Amazon products to your Shopify store — from setup to scaling to thousands of products.</p>
+              <p style="opacity:0.6;font-size:0.75rem;">📅 Feb 22, 2026 &nbsp;•&nbsp; 🕒 12 min read</p>
+            </div>
+          </div>
+          <div style="padding:2rem;display:flex;flex-direction:column;justify-content:center;">
+            <p class="text-muted mb-6">Whether you're starting your first affiliate store or scaling an existing dropshipping business, this comprehensive guide covers every aspect of using Spreadr to import and manage Amazon products on Shopify.</p>
+            <button class="btn btn-outline" style="width:fit-content;">Read Article →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="grid grid-3">
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">Getting Started</span>
+            <h3 class="font-display font-semibold text-lg mb-2">How to Start an Amazon Affiliate Store on Shopify in 2026</h3>
+            <p class="text-sm text-muted mb-4">A complete step-by-step guide to building a profitable Amazon affiliate store using Shopify and Spreadr.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Feb 20, 2026</span><span>🕒 8 min read</span></div>
+          </div>
+        </article>
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">Business Strategy</span>
+            <h3 class="font-display font-semibold text-lg mb-2">Amazon Dropshipping vs Affiliate Marketing: Which is Right for You?</h3>
+            <p class="text-sm text-muted mb-4">Compare the two most popular business models for selling Amazon products on Shopify.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Feb 15, 2026</span><span>🕒 6 min read</span></div>
+          </div>
+        </article>
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">SEO & Optimization</span>
+            <h3 class="font-display font-semibold text-lg mb-2">10 Tips to Optimize Your Amazon Product Listings on Shopify</h3>
+            <p class="text-sm text-muted mb-4">Boost your SEO and conversions with these proven strategies for optimizing imported Amazon product pages.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Feb 10, 2026</span><span>🕒 5 min read</span></div>
+          </div>
+        </article>
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">Features</span>
+            <h3 class="font-display font-semibold text-lg mb-2">Understanding Auto-Sync: Keep Your Store Always Updated</h3>
+            <p class="text-sm text-muted mb-4">Learn how Spreadr's auto-sync and super-sync features work to keep your product prices in sync with Amazon.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Feb 5, 2026</span><span>🕒 4 min read</span></div>
+          </div>
+        </article>
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">Growth</span>
+            <h3 class="font-display font-semibold text-lg mb-2">How to Use Geo-Localization to Boost International Sales</h3>
+            <p class="text-sm text-muted mb-4">Geo-localization redirects visitors to their local Amazon store. Learn how this can increase your affiliate conversions.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Jan 28, 2026</span><span>🕒 5 min read</span></div>
+          </div>
+        </article>
+        <article class="card card-elevated" style="padding:0;overflow:hidden;cursor:pointer;">
+          <div class="blog-bar"></div>
+          <div style="padding:1.5rem;">
+            <span class="tag tag-primary mb-3">Dropshipping</span>
+            <h3 class="font-display font-semibold text-lg mb-2">Markup Pricing Strategies for Amazon Dropshipping Success</h3>
+            <p class="text-sm text-muted mb-4">Master Spreadr's markup pricing feature to set competitive prices while maintaining healthy margins.</p>
+            <div class="flex justify-between text-xs text-muted"><span>📅 Jan 20, 2026</span><span>🕒 7 min read</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- FAQS PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-faqs">
+
+  <section class="section section-gradient text-center">
+    <div class="container">
+      <h1 class="hero-title mb-4">Frequently Asked <span class="text-gradient">Questions</span></h1>
+      <p class="text-lg text-muted max-w-2xl mx-auto">Everything you need to know about Spreadr. Can't find your answer? Contact our support team.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container max-w-4xl">
+
+      <!-- Getting Started -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold" style="font-size:1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="width:0.5rem;height:1.5rem;border-radius:999px;background:var(--primary);display:inline-block;"></span> Getting Started</h2>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">How do I install Spreadr on my Shopify store?</button><div class="accordion-content">Simply visit our Shopify App Store listing and click 'Install'. The app will be added to your Shopify admin dashboard. No coding or technical setup is required.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Is there a free trial?</button><div class="accordion-content">Yes! All plans come with a 7-day free trial. You can test all features before committing to a subscription.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What are the pricing plans?</button><div class="accordion-content">We offer four plans: Basic ($5/mo), Pro ($10/mo), Gold ($20/mo), and Higher ($35+/mo). Each plan offers unlimited product imports with varying auto-sync limits and features.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Do I need an Amazon Associates account?</button><div class="accordion-content">For affiliate marketing, yes — you'll need an Amazon Associates account to earn commissions. For dropshipping, an Amazon Associates account is optional.</div></div>
+      </div>
+
+      <!-- Product Import -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold" style="font-size:1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="width:0.5rem;height:1.5rem;border-radius:999px;background:var(--primary);display:inline-block;"></span> Product Import</h2>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">How do I import a product from Amazon?</button><div class="accordion-content">You can import products three ways: 1) Paste an Amazon product URL directly, 2) Upload a CSV file with ASINs for bulk import, or 3) Use our free Chrome Extension to import while browsing Amazon.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Is there a limit on how many products I can import?</button><div class="accordion-content">All plans include unlimited product imports. The limits apply only to auto-sync — Basic has no auto-sync, Pro syncs up to 1,000, Gold up to 3,000, and Higher plans up to 50,000+ products.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What data is imported from Amazon?</button><div class="accordion-content">We import the product title, description, images, price, availability, brand/vendor, and product type. You can customize which attributes to include.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Can I import products in bulk?</button><div class="accordion-content">Yes! You can upload a CSV file with a list of Amazon ASINs to import hundreds of products at once. The Chrome Extension also enables quick sequential imports.</div></div>
+      </div>
+
+      <!-- Auto-Sync & Pricing -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold" style="font-size:1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="width:0.5rem;height:1.5rem;border-radius:999px;background:var(--primary);display:inline-block;"></span> Auto-Sync &amp; Pricing</h2>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What is Auto-sync?</button><div class="accordion-content">Auto-sync automatically updates your imported products' prices and availability to match Amazon. It runs on a schedule to keep your store always current.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What is Super-sync?</button><div class="accordion-content">Super-sync provides faster, more frequent updates. When a customer adds a product to their cart, Spreadr checks Amazon for the latest price and availability.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">How does Markup Pricing work?</button><div class="accordion-content">You can set custom pricing rules with multipliers and fixed additions. For example, set Amazon Price × 1.25 + $2.00 to add a 25% margin plus $2. You can also assign specific cents to prices.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What happens when a product goes out of stock on Amazon?</button><div class="accordion-content">You configure the behavior: mark it as OUT OF STOCK on your Shopify store, remove it entirely, or keep it listed. Similar rules exist for discontinued products.</div></div>
+      </div>
+
+      <!-- Affiliate & Dropshipping -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold" style="font-size:1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="width:0.5rem;height:1.5rem;border-radius:999px;background:var(--primary);display:inline-block;"></span> Affiliate &amp; Dropshipping</h2>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">How do I earn affiliate commissions?</button><div class="accordion-content">Import products and set the button to 'View on Amazon'. When customers click through and make a purchase on Amazon, you earn the affiliate commission. We don't take any cut of your commissions.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Can I dropship Amazon products?</button><div class="accordion-content">Yes! With the dropship option, you can set your own prices with markup, keep the 'Add to Cart' button, and fulfill orders through Amazon.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">What is Geo-localization?</button><div class="accordion-content">Geo-localize detects your visitor's location and redirects them to the appropriate Amazon storefront (e.g., UK visitors to amazon.co.uk, US visitors to amazon.com), increasing conversion rates.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Which Amazon regions are supported?</button><div class="accordion-content">We support all major Amazon marketplaces including US, UK, Germany, France, Italy, Spain, Japan, Canada, India, Australia, and more.</div></div>
+      </div>
+
+      <!-- Technical & Support -->
+      <div class="mb-8">
+        <h2 class="font-display font-bold" style="font-size:1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="width:0.5rem;height:1.5rem;border-radius:999px;background:var(--primary);display:inline-block;"></span> Technical &amp; Support</h2>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Does Spreadr work with all Shopify themes?</button><div class="accordion-content">Yes, Spreadr is compatible with all Shopify themes including free themes, premium themes, and custom themes.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">How do I get support?</button><div class="accordion-content">You can reach us via email at support@spreadr.co, through live chat on our support portal, or by browsing our knowledge base at spreadr.freshdesk.com.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Can I track clicks with Google Analytics?</button><div class="accordion-content">Yes! Spreadr integrates with Google Analytics and Facebook Pixel. Enable click tracking in your settings to track all clicks on Amazon links.</div></div>
+        <div class="accordion-item"><button class="accordion-trigger" onclick="toggleAccordion(this)">Is my data secure?</button><div class="accordion-content">Yes, we take data privacy seriously. We comply with GDPR and Shopify's data protection requirements. Read our full privacy policy for details.</div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section-sm hero-gradient text-center" style="color:var(--primary-fg);padding:4rem 0;">
+    <div class="container">
+      <h2 style="font-size:1.875rem;font-weight:700;margin-bottom:1rem;" class="font-display">Still Have Questions?</h2>
+      <p style="opacity:0.8;margin-bottom:1.5rem;">Our support team is ready to help you get started.</p>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-card btn-lg">Install on Shopify →</button></a>
+        <a href="https://spreadr.freshdesk.com/" target="_blank"><button class="btn btn-lg" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:var(--primary-fg);">Contact Support</button></a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- ABOUT US PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-about">
+
+  <section class="hero-overlay hero-overlay-about" style="background-color:var(--fg);padding:7rem 0;">
+    <div class="container">
+      <div style="max-width:42rem;">
+        <h1 class="hero-title mb-4" style="color:var(--bg);">About Spreadr</h1>
+        <p style="color:rgba(245,247,250,0.8);font-size:1.125rem;margin-bottom:1.5rem;">Empowering Shopify merchants to build profitable affiliate and dropshipping businesses with Amazon products since 2016.</p>
+        <div class="flex flex-wrap gap-3">
+          <span style="padding:0.5rem 1rem;border-radius:999px;background:rgba(245,247,250,0.1);color:var(--bg);font-size:0.875rem;border:1px solid rgba(245,247,250,0.2);">🔗 Affiliate Marketing</span>
+          <span style="padding:0.5rem 1rem;border-radius:999px;background:rgba(245,247,250,0.1);color:var(--bg);font-size:0.875rem;border:1px solid rgba(245,247,250,0.2);">🚚 Dropshipping</span>
+          <span style="padding:0.5rem 1rem;border-radius:999px;background:rgba(245,247,250,0.1);color:var(--bg);font-size:0.875rem;border:1px solid rgba(245,247,250,0.2);">🌍 Global Reach</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & Story -->
+  <section class="section">
+    <div class="container max-w-6xl">
+      <div class="grid grid-2" style="gap:4rem;align-items:center;">
+        <div>
+          <span class="tag tag-primary mb-4">🎯 Our Mission</span>
+          <h2 style="font-size:1.875rem;font-weight:700;" class="font-display mb-6">Making Amazon <span class="text-gradient">Affiliate &amp; Dropshipping</span> Accessible to Everyone</h2>
+          <p class="text-muted text-lg mb-4" style="line-height:1.8;">Spreadr was launched in November 2016 by <strong>Thalia</strong>, with a simple mission: make it easy for anyone to sell Amazon products on Shopify — whether through affiliate marketing or dropshipping.</p>
+          <p class="text-muted" style="line-height:1.7;">Based in Mumbai, India, our team is dedicated to building tools that help merchants expand their product offerings, earn affiliate commissions, and run successful dropshipping businesses — all powered by Amazon's massive product catalog.</p>
+        </div>
+        <div class="grid grid-2" style="gap:1rem;">
+          <div class="card card-elevated text-center" style="border-radius:1rem;padding:1.5rem;">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">👥</div>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--primary);" class="font-display">10,000+</p>
+            <p class="text-xs text-muted mt-1">Active Merchants</p>
+          </div>
+          <div class="card card-elevated text-center" style="border-radius:1rem;padding:1.5rem;">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">🚀</div>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--primary);" class="font-display">1M+</p>
+            <p class="text-xs text-muted mt-1">Products Imported</p>
+          </div>
+          <div class="card card-elevated text-center" style="border-radius:1rem;padding:1.5rem;">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">🏆</div>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--primary);" class="font-display">4.6★</p>
+            <p class="text-xs text-muted mt-1">App Store Rating</p>
+          </div>
+          <div class="card card-elevated text-center" style="border-radius:1rem;padding:1.5rem;">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">🛡️</div>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--primary);" class="font-display">8+ Yrs</p>
+            <p class="text-xs text-muted mt-1">In Business</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What We Enable -->
+  <section class="section section-gradient">
+    <div class="container max-w-6xl">
+      <div class="section-header">
+        <h2>What Spreadr <span class="text-gradient">Enables</span></h2>
+        <p>We help merchants monetize Amazon's catalog in two powerful ways</p>
+      </div>
+      <div class="grid grid-2" style="gap:2rem;">
+        <div class="card card-lg card-elevated">
+          <div class="icon-box icon-box-lg icon-box-shopify">🔗</div>
+          <h3 style="font-size:1.25rem;font-weight:700;" class="font-display mb-3">Amazon Affiliate Stores</h3>
+          <p class="text-muted mb-4">Build a curated storefront of Amazon products. Visitors click "View on Amazon" and you earn commissions through the Amazon Associates program.</p>
+          <ul class="checklist space-y-2"><li><span class="check-icon">✓</span> Zero inventory or fulfillment</li><li><span class="check-icon">✓</span> Keep 100% of commissions</li><li><span class="check-icon">✓</span> Amazon handles shipping &amp; returns</li><li><span class="check-icon">✓</span> Great for niche content sites</li></ul>
+        </div>
+        <div class="card card-lg card-elevated">
+          <div class="icon-box icon-box-lg icon-box-primary">🚚</div>
+          <h3 style="font-size:1.25rem;font-weight:700;" class="font-display mb-3">Dropshipping Stores</h3>
+          <p class="text-muted mb-4">Import Amazon products with custom markup pricing. Customers buy on your store, you fulfill from Amazon and keep the margin.</p>
+          <ul class="checklist space-y-2"><li><span class="check-icon">✓</span> Set your own prices with markup</li><li><span class="check-icon">✓</span> Add to Cart on your store</li><li><span class="check-icon">✓</span> Auto-sync keeps prices accurate</li><li><span class="check-icon">✓</span> Scale to thousands of products</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="section">
+    <div class="container max-w-6xl">
+      <div class="section-header"><h2>Our Values</h2></div>
+      <div class="grid grid-3">
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">💡</div><h3 class="font-display font-semibold mb-2">Innovation</h3><p class="text-sm text-muted">We continuously improve with features like Super-sync, Geo-localization, and Chrome Extension to keep you ahead.</p></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">❤️</div><h3 class="font-display font-semibold mb-2">Merchant Success</h3><p class="text-sm text-muted">Your success is our success. We provide the tools and support to help you build a thriving affiliate or dropshipping business.</p></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">🛡️</div><h3 class="font-display font-semibold mb-2">Reliability</h3><p class="text-sm text-muted">8+ years of uptime and continuous service. We sync millions of products reliably every day.</p></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">👥</div><h3 class="font-display font-semibold mb-2">Community</h3><p class="text-sm text-muted">Over 10,000 merchants trust Spreadr. We listen to our community and build features that matter.</p></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">🌍</div><h3 class="font-display font-semibold mb-2">Global Reach</h3><p class="text-sm text-muted">Supporting all major Amazon regions worldwide, enabling merchants to sell to customers everywhere.</p></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">🏆</div><h3 class="font-display font-semibold mb-2">Excellence</h3><p class="text-sm text-muted">4.6-star rating with 254+ reviews. Merchants consistently praise our quality and responsive support.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Milestones -->
+  <section class="section section-gradient">
+    <div class="container max-w-4xl">
+      <h2 class="font-display font-bold text-center mb-8" style="font-size:1.875rem;">Our Journey</h2>
+      <div class="space-y-8">
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2016</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">Spreadr Launched</h3><p class="text-sm text-muted">App launched on Shopify App Store with basic Amazon product import for affiliate marketing.</p></div></div>
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2018</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">Auto-Sync Introduced</h3><p class="text-sm text-muted">Launched automatic price and availability sync — essential for dropshipping accuracy.</p></div></div>
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2019</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">Chrome Extension</h3><p class="text-sm text-muted">Released the free Spreadr Chrome Extension for one-click imports while browsing Amazon.</p></div></div>
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2020</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">10,000+ Merchants</h3><p class="text-sm text-muted">Crossed 10,000 active merchants milestone. Introduced Geo-localization for global affiliate reach.</p></div></div>
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2022</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">Super-Sync &amp; Bulk Actions</h3><p class="text-sm text-muted">Launched Super-sync and powerful bulk actions for managing thousands of dropship products.</p></div></div>
+        <div class="milestone"><div class="milestone-year"><span class="text-lg font-bold font-display text-primary">2024</span></div><div class="milestone-line"><div class="milestone-dot"></div></div><div style="padding-bottom:1rem;"><h3 class="font-display font-semibold">250+ Five-Star Reviews</h3><p class="text-sm text-muted">Reached 254 reviews with a 4.6-star average. Continuously improving based on merchant feedback.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="section">
+    <div class="container max-w-5xl">
+      <h2 class="font-display font-bold text-center mb-8" style="font-size:1.875rem;">Get in Touch With Us</h2>
+      <div class="grid grid-4">
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">📧</div><h3 class="font-display font-semibold text-sm mb-1">Email Us</h3><a href="mailto:support@spreadr.co" class="text-sm text-muted" style="color:var(--muted-fg);">support@spreadr.co</a></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">📞</div><h3 class="font-display font-semibold text-sm mb-1">Call Us</h3><a href="tel:+1234567890" class="text-sm text-muted" style="color:var(--muted-fg);">+1 (234) 567-890</a></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">💬</div><h3 class="font-display font-semibold text-sm mb-1">Live Chat</h3><a href="https://spreadr.freshdesk.com/" target="_blank" class="text-sm text-muted" style="color:var(--muted-fg);">Start a conversation</a></div>
+        <div class="card card-elevated text-center"><div class="icon-box icon-box-primary mx-auto">📍</div><h3 class="font-display font-semibold text-sm mb-1">Visit Us</h3><p class="text-sm text-muted">Mumbai, India</p></div>
+      </div>
+      <div class="text-center mt-8">
+        <button class="btn btn-outline btn-lg" onclick="showPage('contact')">Go to Contact Page →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Company Details -->
+  <section class="section-sm section-gradient">
+    <div class="container max-w-4xl">
+      <div class="card card-lg card-elevated">
+        <h3 style="font-size:1.25rem;font-weight:700;" class="font-display mb-6">Company Details</h3>
+        <div class="grid grid-2 text-sm" style="gap:1.5rem;">
+          <div><strong>Company Name:</strong> <span class="text-muted">Thalia</span></div>
+          <div><strong>App Name:</strong> <span class="text-muted">Amazon Importer Spreadr App</span></div>
+          <div><strong>Launched:</strong> <span class="text-muted">November 23, 2016</span></div>
+          <div><strong>Platform:</strong> <span class="text-muted">Shopify App Store</span></div>
+          <div><strong>Location:</strong> <span class="text-muted">380 Happy Home, Shankar Matham Rd, Mumbai, MH, 400019, IN</span></div>
+          <div><strong>Language:</strong> <span class="text-muted">English</span></div>
+          <div><strong>Use Cases:</strong> <span class="text-muted">Amazon Affiliate, Dropshipping, Product Import</span></div>
+          <div><strong>Categories:</strong> <span class="text-muted">Dropshipping, Store Data Importer</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section-sm hero-gradient text-center" style="color:var(--primary-fg);padding:4rem 0;">
+    <div class="container"><h2 style="font-size:1.875rem;font-weight:700;margin-bottom:1rem;" class="font-display">Start Your Affiliate or Dropshipping Journey</h2><p style="opacity:0.8;margin-bottom:1.5rem;">Join 10,000+ merchants building profitable stores with Spreadr.</p><a href="https://apps.shopify.com/amazon-to-shopify" target="_blank"><button class="btn btn-card btn-lg">Install on Shopify →</button></a></div>
+  </section>
+</div>
+
+<!-- ========================================== -->
+<!-- CONTACT US PAGE -->
+<!-- ========================================== -->
+<div class="page" id="page-contact">
+
+  <section class="section section-gradient">
+    <div class="container">
+      <div class="grid grid-2" style="align-items:center;gap:3rem;">
+        <div>
+          <h1 class="hero-title mb-4">Get in <span class="text-gradient">Touch</span></h1>
+          <p class="text-lg text-muted">We're here to help. Reach out through any of the channels below, or fill out the contact form and we'll get back to you promptly.</p>
+        </div>
+        <div class="text-center">
+          <div style="font-size:5rem;">📞</div>
+          <p class="font-display font-semibold mt-2">We're here for you</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support Options -->
+  <section class="section-sm">
+    <div class="container">
+      <h2 class="font-display font-bold text-center mb-8" style="font-size:1.5rem;">Support Center</h2>
+      <div class="grid grid-3 max-w-4xl mx-auto">
+        <a href="https://spreadr.freshdesk.com/" target="_blank" class="card card-elevated text-center" style="cursor:pointer;">
+          <div class="icon-box icon-box-lg icon-box-primary mx-auto">📄</div>
+          <h3 class="font-display font-semibold mb-2">Documentation</h3>
+          <p class="text-sm text-muted mb-3">Browse our comprehensive guides, tutorials, and FAQs.</p>
+          <span class="text-sm text-primary font-semibold">Browse Articles ↗</span>
+        </a>
+        <a href="https://spreadr.freshdesk.com/" target="_blank" class="card card-elevated text-center" style="cursor:pointer;">
+          <div class="icon-box icon-box-lg icon-box-shopify mx-auto">💬</div>
+          <h3 class="font-display font-semibold mb-2">Live Chat</h3>
+          <p class="text-sm text-muted mb-3">Connect with our support team in real-time for immediate assistance.</p>
+          <span class="text-sm text-shopify font-semibold">Start Live Chat ↗</span>
+        </a>
+        <a href="https://apps.shopify.com/amazon-to-shopify#adp-reviews" target="_blank" class="card card-elevated text-center" style="cursor:pointer;">
+          <div class="icon-box icon-box-lg icon-box-amber mx-auto">⭐</div>
+          <h3 class="font-display font-semibold mb-2">Leave a Review</h3>
+          <p class="text-sm text-muted mb-3">Share your experience and help other merchants discover Spreadr.</p>
+          <span class="text-sm font-semibold" style="color:#f59e0b;">Write a Review ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form & Info -->
+  <section class="section section-gradient">
+    <div class="container max-w-5xl">
+      <div class="grid grid-2" style="gap:3rem;">
+        <!-- Form -->
+        <div class="card card-lg card-elevated">
+          <h3 style="font-size:1.25rem;font-weight:700;" class="font-display mb-6">Send Us a Message</h3>
+          <form onsubmit="event.preventDefault();alert('Message sent! We will get back to you soon.');">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="John"></div>
+              <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="Doe"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="john@example.com"></div>
+            <div class="form-group"><label class="form-label">Store URL</label><input class="form-input" placeholder="yourstore.myshopify.com"></div>
+            <div class="form-group"><label class="form-label">Subject</label><input class="form-input" placeholder="How can we help?"></div>
+            <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" placeholder="Describe your question or issue..." rows="4"></textarea></div>
+            <button class="btn btn-primary btn-full" type="submit">✉️ Send Message</button>
+          </form>
+        </div>
+        <!-- Info -->
+        <div class="space-y-8">
+          <div>
+            <h3 style="font-size:1.25rem;font-weight:700;" class="font-display mb-6">Contact Information</h3>
+            <div class="space-y-4">
+              <div class="flex items-start gap-4"><div class="icon-box icon-box-primary shrink-0" style="width:2.5rem;height:2.5rem;margin:0;">📧</div><div><p class="text-sm font-semibold">Email</p><a href="mailto:support@spreadr.co" class="text-sm text-muted">support@spreadr.co</a></div></div>
+              <div class="flex items-start gap-4"><div class="icon-box icon-box-primary shrink-0" style="width:2.5rem;height:2.5rem;margin:0;">📞</div><div><p class="text-sm font-semibold">Phone</p><a href="tel:+1234567890" class="text-sm text-muted">+1 (234) 567-890</a></div></div>
+              <div class="flex items-start gap-4"><div class="icon-box icon-box-primary shrink-0" style="width:2.5rem;height:2.5rem;margin:0;">💬</div><div><p class="text-sm font-semibold">Live Chat</p><a href="https://spreadr.freshdesk.com/" target="_blank" class="text-sm text-muted">Available on our support portal</a></div></div>
+              <div class="flex items-start gap-4"><div class="icon-box icon-box-primary shrink-0" style="width:2.5rem;height:2.5rem;margin:0;">🕒</div><div><p class="text-sm font-semibold">Support Hours</p><p class="text-sm text-muted">Mon-Fri, 9am-6pm IST</p></div></div>
+              <div class="flex items-start gap-4"><div class="icon-box icon-box-primary shrink-0" style="width:2.5rem;height:2.5rem;margin:0;">📍</div><div><p class="text-sm font-semibold">Address</p><p class="text-sm text-muted">380 Happy Home, Shankar Matham Rd, Mumbai, MH, 400019, IN</p></div></div>
+            </div>
+          </div>
+          <div class="card" style="border:1px solid var(--border);">
+            <h4 class="font-display font-semibold mb-3">Important Information</h4>
+            <ul class="space-y-2 text-sm text-muted">
+              <li>• We use Amazon API to pull product data. Sometimes data can be erroneous or incomplete. Please verify before publishing.</li>
+              <li>• Amazon API does not provide price information for <strong>"Kindle Edition"</strong> products.</li>
+              <li>• Please import products from <strong>one Amazon region only</strong>. The app syncs from one primary region at a time.</li>
+            </ul>
+          </div>
+          <div class="card" style="border:1px solid var(--border);">
+            <h4 class="font-display font-semibold mb-3">Quick Links</h4>
+            <div class="flex flex-wrap gap-2">
+              <a href="https://spreadr.freshdesk.com/support/solutions/articles/24000031153-privacy-and-data-protection-agreement" target="_blank" style="padding:0.375rem 0.75rem;border-radius:0.5rem;background:var(--secondary);font-size:0.875rem;">Privacy Policy</a>
+              <a href="#" style="padding:0.375rem 0.75rem;border-radius:0.5rem;background:var(--secondary);font-size:0.875rem;">Customer Data Policy</a>
+              <a href="#" style="padding:0.375rem 0.75rem;border-radius:0.5rem;background:var(--secondary);font-size:0.875rem;">Disclaimers</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="grid grid-5" style="gap:2.5rem;">
+      <!-- Brand -->
+      <div style="grid-column:span 2;">
+        <div class="flex items-center gap-2 mb-4">
+          <div style="width:2rem;height:2rem;border-radius:0.5rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem;">S</div>
+          <span style="font-size:1.25rem;font-weight:700;font-family:'Space Grotesk',sans-serif;">Spreadr</span>
+        </div>
+        <p style="color:rgba(245,247,250,0.7);font-size:0.875rem;max-width:20rem;line-height:1.7;margin-bottom:1rem;">
+          The #1 Amazon Product Importer for Shopify. Import, sync, and sell Amazon products effortlessly. Trusted by thousands of merchants worldwide since 2016.
+        </p>
+        <div class="social-icons">
+          <a href="#" class="social-icon">f</a>
+          <a href="#" class="social-icon">𝕏</a>
+          <a href="#" class="social-icon">in</a>
+          <a href="#" class="social-icon">ig</a>
+          <a href="#" class="social-icon">▶</a>
+        </div>
+      </div>
+      <!-- Quick Links -->
+      <div>
+        <h4>Quick Links</h4>
+        <ul class="space-y-2">
+          <li><a href="#" onclick="showPage('home');return false;">Home</a></li>
+          <li><a href="#" onclick="showPage('features');return false;">Features</a></li>
+          <li><a href="#" onclick="showPage('case-studies');return false;">Case Studies</a></li>
+          <li><a href="#" onclick="showPage('blog');return false;">Blog</a></li>
+          <li><a href="#" onclick="showPage('faqs');return false;">FAQs</a></li>
+          <li><a href="#" onclick="showPage('about');return false;">About Us</a></li>
+          <li><a href="#" onclick="showPage('contact');return false;">Contact Us</a></li>
+        </ul>
+      </div>
+      <!-- Legal -->
+      <div>
+        <h4>Legal</h4>
+        <ul class="space-y-2">
+          <li><a href="https://spreadr.freshdesk.com/support/solutions/articles/24000031153-privacy-and-data-protection-agreement" target="_blank">Privacy Policy</a></li>
+          <li><a href="#">Terms &amp; Conditions</a></li>
+          <li><a href="#">Customer Data Policy</a></li>
+          <li><a href="#">Disclaimers</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+        </ul>
+      </div>
+      <!-- Contact -->
+      <div>
+        <h4>Contact Us</h4>
+        <ul class="space-y-3">
+          <li><a href="mailto:support@spreadr.co">📧 support@spreadr.co</a></li>
+          <li><a href="tel:+1234567890">📞 +1 (234) 567-890</a></li>
+          <li><a href="https://spreadr.freshdesk.com/" target="_blank">💬 Live Chat Support</a></li>
+          <li style="color:rgba(245,247,250,0.7);font-size:0.875rem;">📍 380 Happy Home, Shankar Matham Rd, Mumbai, MH, 400019, IN</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Spreadr by Thalia. All rights reserved.</p>
+      <a href="https://apps.shopify.com/amazon-to-shopify" target="_blank" style="display:flex;align-items:center;gap:0.5rem;">
+        <svg class="shopify-icon" viewBox="0 0 24 24" style="fill:rgba(245,247,250,0.7);"><path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.058-.121-.074l-.914 21.104zm-1.024-17.379c0-.137-.939-.191-2.151-.191-3.508 0-7.329 1.462-7.329 5.27 0 1.604.542 2.749 1.93 3.691 1.228.834 1.458 1.069 1.458 1.753 0 .683-.439 1.424-1.305 1.424-1.284 0-2.385-.844-2.385-.844l-.844 2.522s1.387.946 3.559.946c2.172 0 3.852-1.351 3.852-3.502 0-1.753-.939-2.709-2.023-3.471-1.013-.712-1.372-1.069-1.372-1.753 0-.547.398-1.139 1.284-1.139 1.454 0 2.093.534 2.093.534l.822-2.484s-.717-.547-2.289-.547c-.17 0-.337.01-.5.027.025-.017.049-.036.075-.053 1.379-.91 3.267-1.423 4.472-1.423.144 0 .281.006.407.019l.246-1.279z"/></svg>
+        Available on Shopify App Store
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function showPage(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    // Show target
+    const target = document.getElementById('page-' + pageId);
+    if (target) target.classList.add('active');
+
+    // Update nav active states
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.classList.remove('active');
+      if (link.textContent.trim().toLowerCase().replace(/\s+/g, '-') === pageId ||
+          (pageId === 'home' && link.textContent.trim() === 'Home')) {
+        link.classList.add('active');
+      }
+    });
+
+    // Close mobile menu
+    document.getElementById('mobileMenu').classList.remove('open');
+    document.getElementById('menuIcon').style.display = 'block';
+    document.getElementById('closeIcon').style.display = 'none';
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function toggleMobile() {
+    const menu = document.getElementById('mobileMenu');
+    const menuIcon = document.getElementById('menuIcon');
+    const closeIcon = document.getElementById('closeIcon');
+    menu.classList.toggle('open');
+    if (menu.classList.contains('open')) {
+      menuIcon.style.display = 'none';
+      closeIcon.style.display = 'block';
+    } else {
+      menuIcon.style.display = 'block';
+      closeIcon.style.display = 'none';
+    }
+  }
+
+  function toggleAccordion(trigger) {
+    const content = trigger.nextElementSibling;
+    const isOpen = content.classList.contains('open');
+    
+    // Close all in same parent
+    trigger.closest('.mb-8').querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+    trigger.closest('.mb-8').querySelectorAll('.accordion-trigger').forEach(t => t.classList.remove('open'));
+    
+    if (!isOpen) {
+      content.classList.add('open');
+      trigger.classList.add('open');
+    }
+  }
+</script>
+
+</body>
+</html>
