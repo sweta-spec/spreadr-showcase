@@ -30,7 +30,7 @@ const ContactUs = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <img src={contactHero} alt="Support Team" className="rounded-2xl card-elevated border border-border max-w-sm mx-auto lg:max-w-none" />
+              <img src={contactHero} alt="Support Team" className="rounded-2xl card-elevated border border-border max-w-xs mx-auto lg:max-w-sm w-full h-auto object-contain" />
             </motion.div>
           </div>
         </div>

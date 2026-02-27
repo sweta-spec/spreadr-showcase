@@ -59,7 +59,7 @@ const Blog = () => {
         <div className="container mx-auto px-4 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
             <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">
-              Spreadr <span className="text-gradient">Blog</span>
+              Insights & <span className="text-gradient">Guides</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Tips, guides, and insights on Amazon product importing, affiliate marketing, and growing your Shopify store.

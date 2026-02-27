@@ -15,7 +15,7 @@ const fadeUp = {
 const Features = () => {
   const features = [
     { icon: Zap, title: "1-Click Product Import", desc: "Import any Amazon product with a single click. Full product details including title, description, images, price, and variations.", highlights: ["Single product import via URL", "Bulk import via CSV", "Chrome Extension import"] },
-    { icon: RefreshCw, title: "Auto-Sync & Super-Sync", desc: "Keep products always up-to-date with Amazon. Auto-sync updates prices and availability. Super-sync provides real-time updates.", highlights: ["Scheduled auto-sync", "Real-time super-sync", "Custom sync rules for price/stock"] },
+    { icon: RefreshCw, title: "Auto-Sync & Super-Sync", desc: "Keep products always up-to-date with Amazon. Auto-sync updates prices and availability periodically. Super-Sync provides faster, more frequent updates.", highlights: ["Scheduled auto-sync", "Super-Sync for frequent updates", "Custom sync rules for price/stock"] },
     { icon: Tag, title: "Markup Pricing", desc: "Set custom pricing rules for dropshipping margins. Configure markup multipliers, fixed additions, and assign cents.", highlights: ["Multiplier & fixed markup", "Assign cents to price", "Apply to existing products"] },
     { icon: Globe, title: "Geo-Localization", desc: "Auto-detect visitor location and redirect them to their country-specific Amazon storefront for better affiliate conversions.", highlights: ["Auto-detect visitor location", "All major Amazon regions", "Seamless redirects"] },
     { icon: BarChart3, title: "Click Tracking & Analytics", desc: "Track affiliate clicks with Google Analytics and Facebook Pixel integration. Monitor performance and optimize conversions.", highlights: ["Google Analytics integration", "Facebook Pixel tracking", "View click data in dashboard"] },
@@ -85,10 +85,10 @@ const Features = () => {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 <RefreshCw className="w-3 h-3" /> Sync
               </div>
-              <h2 className="text-3xl font-bold font-display">Real-Time <span className="text-gradient">Sync</span></h2>
-              <p className="text-muted-foreground">Never worry about outdated product information. Auto-sync keeps prices and availability updated automatically — critical for both affiliate and dropshipping models.</p>
+              <h2 className="text-3xl font-bold font-display">Auto-Sync & <span className="text-gradient">Super-Sync</span></h2>
+              <p className="text-muted-foreground">Never worry about outdated product information. Auto-sync keeps prices and availability updated periodically — critical for both affiliate and dropshipping models.</p>
               <ul className="space-y-3">
-                {["Scheduled auto-sync up to 50,000 products", "Super-sync for real-time cart updates", "Custom rules for price & stock changes", "Primary Amazon region selection"].map((item, i) => (
+                {["Scheduled auto-sync up to 50,000 products", "Super-Sync for faster, frequent updates", "Custom rules for price & stock changes", "Primary Amazon region selection"].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm"><CheckCircle2 className="w-4 h-4 text-shopify shrink-0" />{item}</li>
                 ))}
               </ul>
