@@ -91,7 +91,7 @@ const Index = () => {
                     <RefreshCw className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold">Real-time Sync</p>
+                    <p className="text-xs font-semibold">Auto-Sync</p>
                     <p className="text-xs text-muted-foreground">Always up to date</p>
                   </div>
                 </div>
@@ -168,14 +168,14 @@ const Index = () => {
               Everything You Need to <span className="text-gradient">Scale</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              From one-click imports to real-time syncing, Spreadr gives you the tools to build a profitable Amazon affiliate or dropshipping store on Shopify.
+              From one-click imports to auto-syncing, Spreadr gives you the tools to build a profitable Amazon affiliate or dropshipping store on Shopify.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Zap, title: "1-Click Import", desc: "Import any Amazon product to your Shopify store instantly. Full product details, images, and variations." },
-              { icon: RefreshCw, title: "Auto-Sync", desc: "Keep prices and availability in sync with Amazon automatically. Super-sync option for real-time updates." },
+              { icon: RefreshCw, title: "Auto-Sync", desc: "Keep prices and availability in sync with Amazon automatically. Super-Sync option for faster updates." },
               { icon: Globe, title: "Geo-Localize", desc: "Redirect visitors to their local Amazon store automatically. Support all major Amazon regions worldwide." },
               { icon: Tag, title: "Markup Pricing", desc: "Set custom pricing rules and markups for your imported products. Perfect for dropshipping margins." },
               { icon: Chrome, title: "Chrome Extension", desc: "Import products directly from Amazon with our free Chrome Extension. Browse and add in seconds." },
@@ -219,7 +219,7 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
             {[
               { step: "01", img: stepImport, title: "Import Products", desc: "Use 1-click import, bulk CSV upload, or the Chrome Extension to add Amazon products to your Shopify store instantly." },
-              { step: "02", img: stepSync, title: "Auto-Sync & Customize", desc: "Products auto-sync prices and availability with Amazon. Customize markup, tags, and descriptions for your brand." },
+              { step: "02", img: stepSync, title: "Sync & Customize", desc: "Products auto-sync prices and availability with Amazon. Customize markup, tags, and descriptions for your brand." },
               { step: "03", img: stepEarn, title: "Earn & Grow", desc: "Earn affiliate commissions on every click or dropship with your own pricing. Geo-localize visitors and track revenue." },
             ].map((item, i) => (
               <motion.div
